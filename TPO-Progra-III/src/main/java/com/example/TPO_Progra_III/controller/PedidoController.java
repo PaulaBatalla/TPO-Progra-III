@@ -9,7 +9,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/pedidos")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = {"http://localhost:3000", "https://analisis-de-algoritmos.vercel.app"})
 public class PedidoController {
     private final ServicioOrdenamiento servicioOrdenamiento;
 
