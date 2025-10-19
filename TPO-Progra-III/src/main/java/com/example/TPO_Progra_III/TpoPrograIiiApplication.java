@@ -14,7 +14,7 @@ public class TpoPrograIiiApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(TpoPrograIiiApplication.class, args);
-
+ /*
         final String dbUri = "neo4j+s://6f05a98a.databases.neo4j.io";
         final String dbUser = "neo4j";
         final String dbPassword = "9udAN6IwIGmZj7r8uNtAtz__DPf61SPJHJz0LwrXfn8";
@@ -56,6 +56,6 @@ public class TpoPrograIiiApplication {
 
 
         }
+*/
     }
-
 }
