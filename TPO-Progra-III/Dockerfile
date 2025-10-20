@@ -2,7 +2,6 @@ FROM openjdk:17-jdk-slim as builder
 
 WORKDIR /app
 
-COPY .mvn/ .mvn
 COPY mvnw pom.xml ./
 RUN ./mvnw dependency:go-offline
 
