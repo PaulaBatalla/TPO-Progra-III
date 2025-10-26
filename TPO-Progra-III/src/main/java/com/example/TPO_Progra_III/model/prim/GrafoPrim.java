@@ -6,6 +6,16 @@ public class GrafoPrim {
     private int numNodos;
     private List<List<AristaPrim>> adyacencias;
 
+    public static class PrimResultadoCompleto {
+        public final int[] costo;
+        public final int[] padre;
+
+        public PrimResultadoCompleto(int[] costo, int[] padre) {
+            this.costo = costo;
+            this.padre = padre;
+        }
+    }
+
     public GrafoPrim(int numNodos) {
         this.numNodos = numNodos;
         this.adyacencias = new ArrayList<>();
@@ -19,7 +29,7 @@ public class GrafoPrim {
         adyacencias.get(destino).add(new AristaPrim(origen, peso));
     }
 
-    public void prim() {
+    public PrimResultadoCompleto prim() {
         boolean[] visitado = new boolean[numNodos];
         int[] costo = new int[numNodos];
         int[] padre = new int[numNodos];
@@ -40,6 +50,7 @@ public class GrafoPrim {
             for (AristaPrim arista: adyacencias.get(nodo)) {
                 int vecino = arista.destino;
                 int peso = arista.peso;
+
                 if (!visitado[vecino] && peso < costo[vecino]) {
                     costo[vecino] = peso;
                     padre[vecino] = nodo;
@@ -48,22 +59,6 @@ public class GrafoPrim {
             }
         }
 
-        String[] nombres = {
-                "Restaurante",
-                "Sucursal Zona Norte",
-                "Sucursal Zona Sur",
-                "Proveedor",
-                "Depósito"
-        };
-
-        System.out.println("\nConexión óptima para distribución de la materia prima:\n");
-        int costoTotal = 0;
-
-        for (int i = 1; i < numNodos; i++) {
-            System.out.println(nombres[padre[i]] + " <-> " + nombres[i] + " | Costo: " + costo[i] + " km");
-            costoTotal += costo[i];
-        }
-
-        System.out.println("\nCosto total mínimo de conexión: " + costoTotal + " km\n");
+        return new PrimResultadoCompleto(costo, padre);
     }
 }
