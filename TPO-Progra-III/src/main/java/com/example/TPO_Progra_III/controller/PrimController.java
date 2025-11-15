@@ -73,8 +73,7 @@ public class PrimController {
         int costoTotal = resultado.getCostoTotal();
 
         StringBuilder sb = new StringBuilder();
-        sb.append("<h2>Árbol de Recubrimiento Mínimo (Prim)</h2>");
-        sb.append("<p>🔹 Conexiones óptimas entre el restaurante, sucursales y proveedor:</p><br>");
+        sb.append("<h2>🔹Conexiones óptimas entre restaurante-sucursales-proveedor con Prim:</h2>");
 
         for (ConexionPrimDTO conexion : conexiones) {
             sb.append("🏠 <b>").append(conexion.getOrigen())

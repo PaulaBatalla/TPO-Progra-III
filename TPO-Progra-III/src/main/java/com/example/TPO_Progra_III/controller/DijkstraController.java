@@ -34,7 +34,7 @@ public class DijkstraController {
         List<Map<String, Object>> caminos = servicioDijkstra.calcularCaminosDesdeDiccionario();
 
         StringBuilder sb = new StringBuilder();
-        sb.append("<h2>Delivery desde el Restaurante con Dijkstra:</h2>");
+        sb.append("<h2>🔹Delivery desde el Restaurante con Dijkstra:</h2>");
 
         for (Map<String, Object> camino : caminos) {
             sb.append("<b>Destino:</b> ").append(camino.get("destino")).append("<br>");
