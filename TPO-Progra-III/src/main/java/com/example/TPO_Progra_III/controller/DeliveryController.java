@@ -3,6 +3,9 @@ package com.example.TPO_Progra_III.controller;
 import com.example.TPO_Progra_III.dto.OptimizarRequestDTO;
 import com.example.TPO_Progra_III.dto.OptimizarResponseDTO;
 import com.example.TPO_Progra_III.service.DeliveryService;
+import com.example.TPO_Progra_III.service.GreedyService;
+import com.example.TPO_Progra_III.service.DynamicProgrammingService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,11 +20,14 @@ public class DeliveryController {
     @Autowired
     private DeliveryService deliveryService;
 
+    @Autowired
+    private GreedyService greedyService;
+
+    @Autowired
+    private DynamicProgrammingService dpService;
+
     /**
-     * Endpoint para optimizar la carga de un repartidor.
-     * Recibe una capacidad máxima y una lista de pedidos.
-     * Devuelve la combinación de pedidos que maximiza el beneficio
-     * sin exceder la capacidad.
+     * Branch & Bound (ya existente en tu TP)
      */
     @PostMapping("/optimizar")
     public ResponseEntity<OptimizarResponseDTO> optimizarEntrega(
@@ -33,5 +39,39 @@ public class DeliveryController {
         );
 
         return ResponseEntity.ok(solucionOptima);
+    }
+
+    /**
+     * NUEVO — Algoritmo Greedy
+     * Selecciona pedidos según el mejor ratio beneficio/peso.
+     */
+    @PostMapping("/optimizar-greedy")
+    public ResponseEntity<OptimizarResponseDTO> optimizarGreedy(
+            @RequestBody OptimizarRequestDTO request) {
+
+        OptimizarResponseDTO solucionGreedy = greedyService.resolverGreedy(
+                request.getPedidos(),
+                request.getCapacidadMaxima()
+        );
+
+        return ResponseEntity.ok(solucionGreedy);
+    }
+
+    /**
+     * NUEVO — Programación Dinámica (Knapsack DP)
+     * Encuentra la solución óptima mediante tabla DP.
+     */
+    @PostMapping("/optimizar-dp")
+    public ResponseEntity<OptimizarResponseDTO> optimizarDP(
+            @RequestBody OptimizarRequestDTO request) {
+
+        int capacidadEntera = (int) request.getCapacidadMaxima(); // DP requiere enteros
+
+        OptimizarResponseDTO solucionDP = dpService.resolverDP(
+                request.getPedidos(),
+                capacidadEntera
+        );
+
+        return ResponseEntity.ok(solucionDP);
     }
 }
