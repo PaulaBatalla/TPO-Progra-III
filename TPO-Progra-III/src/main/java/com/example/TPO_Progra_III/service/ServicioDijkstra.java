@@ -1,6 +1,5 @@
 package com.example.TPO_Progra_III.service;
 
-import com.example.TPO_Progra_III.dto.DijkstraResultado;
 import com.example.TPO_Progra_III.model.dijkstra.GrafoDijkstra;
 import org.springframework.stereotype.Service;
 
@@ -9,59 +8,76 @@ import java.util.*;
 @Service
 public class ServicioDijkstra {
 
-    private final String[] NOMBRES_NODOS = {
-            "Restaurante", "Casa de Facundo", "Casa de Ramiro", "Casa de Paula", "Depósito"
-    };
+    /**
+     * Calcula los caminos mínimos a partir de un diccionario en memoria.
+     * Las conexiones se cargan desde una lista de Map.
+     */
+    public List<Map<String, Object>> calcularCaminosDesdeDiccionario() {
+        List<Map<String, Object>> conexiones = List.of(
+                Map.of("origen", "Restaurante", "destino", "Casa de Facundo", "peso", 1),
+                Map.of("origen", "Restaurante", "destino", "Casa de Ramiro", "peso", 4),
+                Map.of("origen", "Casa de Facundo", "destino", "Casa de Ramiro", "peso", 2),
+                Map.of("origen", "Casa de Facundo", "destino", "Casa de Paula", "peso", 6),
+                Map.of("origen", "Casa de Ramiro", "destino", "Casa de Paula", "peso", 3),
+                Map.of("origen", "Casa de Paula", "destino", "Depósito", "peso", 1),
+                Map.of("origen", "Depósito", "destino", "Restaurante", "peso", 8)
+        );
 
-    public List<DijkstraResultado> calcularCaminosMinimos(int origen) {
-        GrafoDijkstra grafo = inicializarGrafo();
+        String[] NOMBRES_NODOS = {
+                "Restaurante", "Casa de Facundo", "Casa de Ramiro", "Casa de Paula", "Depósito"
+        };
 
-        GrafoDijkstra.DijkstraResultadoCompleto resultados = grafo.dijkstra(origen);
+        Map<String, Integer> mapaNodos = new HashMap<>();
+        for (int i = 0; i < NOMBRES_NODOS.length; i++) {
+            mapaNodos.put(NOMBRES_NODOS[i], i);
+        }
+
+        GrafoDijkstra grafo = new GrafoDijkstra(NOMBRES_NODOS.length);
+
+        for (Map<String, Object> conexion : conexiones) {
+            String origen = (String) conexion.get("origen");
+            String destino = (String) conexion.get("destino");
+            int peso = (int) conexion.get("peso");
+
+            int origenIdx = mapaNodos.get(origen);
+            int destinoIdx = mapaNodos.get(destino);
+
+            grafo.agregarArista(origenIdx, destinoIdx, peso);
+
+            System.out.println("Origen: " + origen + " → Destino: " + destino + " | Cuadras: " + peso);
+        }
+
+        GrafoDijkstra.DijkstraResultadoCompleto resultados = grafo.dijkstra(0);
+
         int[] distancias = resultados.distancias;
         int[] anterior = resultados.anterior;
 
-        List<DijkstraResultado> resultadosDTO = new ArrayList<>();
+        List<Map<String, Object>> caminos = new ArrayList<>();
 
-        for (int i = 0; i < NOMBRES_NODOS.length; i++) {
-            if (i == origen) continue;
+        for (int i = 1; i < NOMBRES_NODOS.length; i++) {
+            List<String> recorrido = reconstruirCamino(i, anterior, NOMBRES_NODOS);
 
-            if (distancias[i] != Integer.MAX_VALUE) {
-                List<String> camino = reconstruirCamino(i, anterior);
-                resultadosDTO.add(new DijkstraResultado(
-                        NOMBRES_NODOS[i],
-                        camino,
-                        distancias[i]
-                ));
-            } else {
-            }
+            Map<String, Object> info = new HashMap<>();
+            info.put("Origen", NOMBRES_NODOS[0]);
+            info.put("destino", NOMBRES_NODOS[i]);
+            info.put("recorrido", recorrido);
+            info.put("distancia", distancias[i]);
+            caminos.add(info);
+
+            System.out.println("Ruta: " + recorrido + " | Distancia: " + distancias[i]);
         }
 
-        return resultadosDTO;
+        return caminos;
     }
 
-    private List<String> reconstruirCamino(int destino, int[] anterior) {
+    private List<String> reconstruirCamino(int destino, int[] anterior, String[] nombres) {
         LinkedList<String> camino = new LinkedList<>();
         int actual = destino;
 
         while (actual != -1) {
-            camino.addFirst(NOMBRES_NODOS[actual]);
+            camino.addFirst(nombres[actual]);
             actual = anterior[actual];
         }
         return camino;
-    }
-
-    private GrafoDijkstra inicializarGrafo() {
-        // 5 nodos: 0=Restaurante, 1=Facundo, 2=Ramiro, 3=Paula, 4=Depósito
-        GrafoDijkstra grafo = new GrafoDijkstra(NOMBRES_NODOS.length);
-
-        grafo.agregarArista(0, 1, 1);  // Restaurante (0) -> Facundo (1), peso 1
-        grafo.agregarArista(0, 2, 4);  // Restaurante (0) -> Ramiro (2), peso 4
-        grafo.agregarArista(1, 2, 2);  // Facundo (1) -> Ramiro (2), peso 2
-        grafo.agregarArista(1, 3, 6);  // Facundo (1) -> Paula (3), peso 6
-        grafo.agregarArista(2, 3, 3);  // Ramiro (2) -> Paula (3), peso 3
-        grafo.agregarArista(3, 4, 1);  // Paula (3) -> Depósito (4), peso 1
-        grafo.agregarArista(4, 0, 8);  // Depósito (4) -> Restaurante (0), peso 8
-
-        return grafo;
     }
 }

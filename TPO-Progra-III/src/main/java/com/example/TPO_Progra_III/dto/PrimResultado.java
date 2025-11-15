@@ -2,9 +2,6 @@ package com.example.TPO_Progra_III.dto;
 
 import java.util.List;
 
-/**
- * DTO para transportar el resultado del cálculo del Árbol de Recubrimiento Mínimo (MST) por Prim.
- */
 public class PrimResultado {
     private List<ConexionPrimDTO> conexiones;
     private int costoTotal;
@@ -14,7 +11,6 @@ public class PrimResultado {
         this.costoTotal = costoTotal;
     }
 
-    // Getters y Setters
     public List<ConexionPrimDTO> getConexiones() {
         return conexiones;
     }

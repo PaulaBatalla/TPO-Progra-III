@@ -5,18 +5,21 @@ import com.example.TPO_Progra_III.dto.PrimResultado;
 import com.example.TPO_Progra_III.model.prim.GrafoPrim;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class ServicioPrim {
 
     private final String[] NOMBRES_NODOS = {
-            "Restaurante", "Sucursal Zona Norte", "Sucursal Zona Sur", "Proveedor", "Depósito"
+            "Restaurante", "Sucursal Zona Norte", "Sucursal Zona Sur", "Proveedor", "Depósito Central"
     };
 
+    /**
+     * Calcula el Árbol de Recubrimiento Mínimo (MST) usando Prim,
+     * con los datos cargados desde un diccionario en memoria.
+     */
     public PrimResultado calcularMST() {
-        GrafoPrim grafo = inicializarGrafo();
+        GrafoPrim grafo = construirGrafoDesdeDiccionario();
 
         GrafoPrim.PrimResultadoCompleto resultados = grafo.prim();
         int[] costo = resultados.costo;
@@ -35,19 +38,39 @@ public class ServicioPrim {
                 costoTotal += costo[i];
             }
         }
+
         return new PrimResultado(conexionesDTO, costoTotal);
     }
 
-    private GrafoPrim inicializarGrafo() {
-        // 5 nodos: 0=Restaurante, 1=Norte, 2=Sur, 3=Proveedor, 4=Depósito
+    private GrafoPrim construirGrafoDesdeDiccionario() {
+        List<Map<String, Object>> conexiones = List.of(
+                Map.of("origen", "Restaurante", "destino", "Sucursal Zona Norte", "peso", 10),
+                Map.of("origen", "Restaurante", "destino", "Sucursal Zona Sur", "peso", 5),
+                Map.of("origen", "Sucursal Zona Norte", "destino", "Proveedor", "peso", 2),
+                Map.of("origen", "Sucursal Zona Norte", "destino", "Depósito Central", "peso", 8),
+                Map.of("origen", "Sucursal Zona Sur", "destino", "Proveedor", "peso", 4),
+                Map.of("origen", "Proveedor", "destino", "Depósito Central", "peso", 3)
+        );
+
+        Map<String, Integer> mapaNodos = new HashMap<>();
+        for (int i = 0; i < NOMBRES_NODOS.length; i++) {
+            mapaNodos.put(NOMBRES_NODOS[i], i);
+        }
+
         GrafoPrim grafo = new GrafoPrim(NOMBRES_NODOS.length);
 
-        grafo.agregarArista(0, 1, 10);
-        grafo.agregarArista(0, 2, 5);
-        grafo.agregarArista(1, 3, 2);
-        grafo.agregarArista(1, 4, 8);
-        grafo.agregarArista(2, 3, 4);
-        grafo.agregarArista(3, 4, 3);
+        for (Map<String, Object> conexion : conexiones) {
+            String origen = (String) conexion.get("origen");
+            String destino = (String) conexion.get("destino");
+            int peso = (int) conexion.get("peso");
+
+            int origenIdx = mapaNodos.get(origen);
+            int destinoIdx = mapaNodos.get(destino);
+
+            grafo.agregarArista(origenIdx, destinoIdx, peso);
+
+            System.out.println("Conexión agregada → " + origen + " ↔ " + destino + " | Costo: " + peso);
+        }
 
         return grafo;
     }

@@ -11,7 +11,6 @@ public class ConexionPrimDTO {
         this.peso = peso;
     }
 
-    // Getters y Setters
     public String getOrigen() {
         return origen;
     }
