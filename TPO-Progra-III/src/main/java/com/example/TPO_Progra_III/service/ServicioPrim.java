@@ -11,7 +11,7 @@ import java.util.*;
 public class ServicioPrim {
 
     private final String[] NOMBRES_NODOS = {
-            "Restaurante", "Sucursal Zona Norte", "Sucursal Zona Sur", "Proveedor", "Depósito"
+            "Restaurante", "Sucursal Zona Norte", "Sucursal Zona Sur", "Proveedor", "Depósito Central"
     };
 
     /**
@@ -47,9 +47,9 @@ public class ServicioPrim {
                 Map.of("origen", "Restaurante", "destino", "Sucursal Zona Norte", "peso", 10),
                 Map.of("origen", "Restaurante", "destino", "Sucursal Zona Sur", "peso", 5),
                 Map.of("origen", "Sucursal Zona Norte", "destino", "Proveedor", "peso", 2),
-                Map.of("origen", "Sucursal Zona Norte", "destino", "Depósito", "peso", 8),
+                Map.of("origen", "Sucursal Zona Norte", "destino", "Depósito Central", "peso", 8),
                 Map.of("origen", "Sucursal Zona Sur", "destino", "Proveedor", "peso", 4),
-                Map.of("origen", "Proveedor", "destino", "Depósito", "peso", 3)
+                Map.of("origen", "Proveedor", "destino", "Depósito Central", "peso", 3)
         );
 
         Map<String, Integer> mapaNodos = new HashMap<>();
