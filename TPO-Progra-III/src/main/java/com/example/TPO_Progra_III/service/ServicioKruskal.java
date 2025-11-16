@@ -1,6 +1,9 @@
 package com.example.TPO_Progra_III.service;
 
 import com.example.TPO_Progra_III.model.GrafoKruskal;
+import com.example.TPO_Progra_III.model.ProveedorKruskal;
+import com.example.TPO_Progra_III.model.RutaAbastecimientoKruskal;
+import com.example.TPO_Progra_III.repository.ProveedorRepository; // <- NUEVO
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -8,19 +11,33 @@ import java.util.*;
 @Service
 public class ServicioKruskal {
 
-    private final String[] NOMBRES_NODOS = {
-            "Proveedor Carnes", "Proveedor Vegetales", "Proveedor Bebidas",
-            "Proveedor Panificados", "Depósito Central"
-    };
+    // --- ¡NUEVO! Inyectamos el repositorio ---
+    private final ProveedorRepository proveedorRepository;
+
+    // Clase interna helper para devolver el grafo y el mapa de nombres
+    private record GrafoConstruido(GrafoKruskal grafo, String[] nombres) {}
+
+    public ServicioKruskal(ProveedorRepository proveedorRepository) { // <- NUEVO
+        this.proveedorRepository = proveedorRepository;
+    }
 
     /**
      * Calcula la red de abastecimiento mínima entre proveedores (árbol mínimo).
      */
     public Map<String, Object> calcularRedAbastecimiento() {
-        GrafoKruskal grafo = construirGrafoDesdeDiccionario();
+        // 1. Construir el grafo desde Neo4j
+        GrafoConstruido datos = construirGrafoDesdeNeo4j(); // <- MÉTODO ACTUALIZADO
+        GrafoKruskal grafo = datos.grafo;
+        String[] NOMBRES_NODOS = datos.nombres;
 
+        if (NOMBRES_NODOS.length == 0) {
+            return Collections.emptyMap();
+        }
+
+        // 2. Ejecutar Kruskal
         List<GrafoKruskal.Arista> mst = grafo.kruskalMST();
 
+        // 3. Formatear la respuesta (tu código original)
         List<Map<String, Object>> conexiones = new ArrayList<>();
         int total = 0;
 
@@ -41,37 +58,51 @@ public class ServicioKruskal {
         return respuesta;
     }
 
-    private GrafoKruskal construirGrafoDesdeDiccionario() {
-        List<Map<String, Object>> conexiones = List.of(
-                Map.of("origen", "Proveedor Carnes", "destino", "Proveedor Vegetales", "peso", 7),
-                Map.of("origen", "Proveedor Carnes", "destino", "Proveedor Bebidas", "peso", 3),
-                Map.of("origen", "Proveedor Carnes", "destino", "Proveedor Panificados", "peso", 8),
-                Map.of("origen", "Proveedor Vegetales", "destino", "Proveedor Panificados", "peso", 2),
-                Map.of("origen", "Proveedor Bebidas", "destino", "Depósito Central", "peso", 5),
-                Map.of("origen", "Proveedor Panificados", "destino", "Depósito Central", "peso", 6),
-                Map.of("origen", "Proveedor Vegetales", "destino", "Depósito Central", "peso", 4)
-        );
+    /**
+     * Método privado que consulta Neo4j y prepara el grafo.
+     */
+    private GrafoConstruido construirGrafoDesdeNeo4j() {
+        // 1. LEER NODOS DESDE NEO4J
+        List<ProveedorKruskal> nodos = proveedorRepository.findAll(); // <- USAMOS REPO
+        int n = nodos.size();
 
+        GrafoKruskal grafo = new GrafoKruskal(n);
+
+        // 2. MAPEAR NODOS A ÍNDICES
         Map<String, Integer> mapaNodos = new HashMap<>();
-        for (int i = 0; i < NOMBRES_NODOS.length; i++) {
-            mapaNodos.put(NOMBRES_NODOS[i], i);
+        String[] NOMBRES_NODOS = new String[n];
+
+        int i = 0;
+        for (ProveedorKruskal nodo : nodos) {
+            mapaNodos.put(nodo.getNombre(), i);
+            NOMBRES_NODOS[i] = nodo.getNombre();
+            i++;
         }
 
-        GrafoKruskal grafo = new GrafoKruskal(NOMBRES_NODOS.length);
+        // 3. AGREGAR ARISTAS AL GRAFO
+        Set<String> aristasAgregadas = new HashSet<>();
 
-        for (Map<String, Object> conexion : conexiones) {
-            String origen = (String) conexion.get("origen");
-            String destino = (String) conexion.get("destino");
-            int peso = (int) conexion.get("peso");
+        for (ProveedorKruskal origen : nodos) {
+            int origenIdx = mapaNodos.get(origen.getNombre());
 
-            int origenIdx = mapaNodos.get(origen);
-            int destinoIdx = mapaNodos.get(destino);
+            for (RutaAbastecimientoKruskal ruta : origen.getRutas()) {
+                ProveedorKruskal destino = ruta.getProveedor();
+                int peso = ruta.getPeso();
 
-            grafo.agregarArista(origenIdx, destinoIdx, peso);
+                if (mapaNodos.containsKey(destino.getNombre())) {
+                    int destinoIdx = mapaNodos.get(destino.getNombre());
 
-            System.out.println("Ruta agregada: " + origen + " ↔ " + destino + " | Distancia: " + peso + " km");
+                    String claveArista = Math.min(origenIdx, destinoIdx) + "-" + Math.max(origenIdx, destinoIdx);
+
+                    if (!aristasAgregadas.contains(claveArista)) {
+                        grafo.agregarArista(origenIdx, destinoIdx, peso);
+                        aristasAgregadas.add(claveArista);
+
+                        System.out.println("Ruta agregada: " + origen.getNombre() + " ↔ " + destino.getNombre() + " | Distancia: " + peso + " km");
+                    }
+                }
+            }
         }
-
-        return grafo;
+        return new GrafoConstruido(grafo, NOMBRES_NODOS);
     }
 }
