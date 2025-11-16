@@ -1,6 +1,9 @@
 package com.example.TPO_Progra_III.service;
 
+import com.example.TPO_Progra_III.model.dijkstra.DestinoDijkstra;
 import com.example.TPO_Progra_III.model.dijkstra.GrafoDijkstra;
+import com.example.TPO_Progra_III.model.dijkstra.RutaDijkstra;
+import com.example.TPO_Progra_III.repository.DestinoRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -8,63 +11,93 @@ import java.util.*;
 @Service
 public class ServicioDijkstra {
 
+    // --- ¡NUEVO! Inyectamos el repositorio ---
+    private final DestinoRepository destinoRepository;
+
+    public ServicioDijkstra(DestinoRepository destinoRepository) {
+        this.destinoRepository = destinoRepository;
+    }
+
     /**
-     * Calcula los caminos mínimos a partir de un diccionario en memoria.
-     * Las conexiones se cargan desde una lista de Map.
+     * Calcula los caminos mínimos a partir de los datos en Neo4j.
      */
     public List<Map<String, Object>> calcularCaminosDesdeDiccionario() {
-        List<Map<String, Object>> conexiones = List.of(
-                Map.of("origen", "Restaurante", "destino", "Casa de Facundo", "peso", 1),
-                Map.of("origen", "Restaurante", "destino", "Casa de Ramiro", "peso", 4),
-                Map.of("origen", "Casa de Facundo", "destino", "Casa de Ramiro", "peso", 2),
-                Map.of("origen", "Casa de Facundo", "destino", "Casa de Paula", "peso", 6),
-                Map.of("origen", "Casa de Ramiro", "destino", "Casa de Paula", "peso", 3),
-                Map.of("origen", "Casa de Paula", "destino", "Depósito", "peso", 1),
-                Map.of("origen", "Depósito", "destino", "Restaurante", "peso", 8)
-        );
 
-        String[] NOMBRES_NODOS = {
-                "Restaurante", "Casa de Facundo", "Casa de Ramiro", "Casa de Paula", "Depósito"
-        };
+        // --- 1. LEER DATOS DESDE NEO4J ---
+        // Obtenemos todos los nodos (Destino)
+        List<DestinoDijkstra> nodos = destinoRepository.findAll();
 
+        // Contamos cuántos nodos hay para inicializar el grafo
+        int n = nodos.size();
+        if (n == 0) {
+            return Collections.emptyList(); // No hay datos
+        }
+
+        GrafoDijkstra grafo = new GrafoDijkstra(n);
+
+        // --- 2. MAPEAR NODOS A ÍNDICES ---
+        // Tu GrafoDijkstra funciona con índices (0, 1, 2...).
+        // Necesitamos crear un mapa (String -> int) y un array (int -> String)
+        // para hacer la "traducción".
         Map<String, Integer> mapaNodos = new HashMap<>();
-        for (int i = 0; i < NOMBRES_NODOS.length; i++) {
-            mapaNodos.put(NOMBRES_NODOS[i], i);
+        String[] NOMBRES_NODOS = new String[n];
+
+        int i = 0;
+        for (DestinoDijkstra nodo : nodos) {
+            mapaNodos.put(nodo.getNombre(), i);
+            NOMBRES_NODOS[i] = nodo.getNombre();
+            i++;
         }
 
-        GrafoDijkstra grafo = new GrafoDijkstra(NOMBRES_NODOS.length);
+        // --- 3. AGREGAR ARISTAS AL GRAFO ---
+        // Iteramos sobre cada nodo y sus relaciones (Rutas)
+        for (DestinoDijkstra origen : nodos) {
+            int origenIdx = mapaNodos.get(origen.getNombre());
 
-        for (Map<String, Object> conexion : conexiones) {
-            String origen = (String) conexion.get("origen");
-            String destino = (String) conexion.get("destino");
-            int peso = (int) conexion.get("peso");
+            // Obtenemos las rutas salientes
+            for (RutaDijkstra ruta : origen.getRutas()) {
+                DestinoDijkstra destino = ruta.getDestino();
+                int peso = ruta.getPeso();
 
-            int origenIdx = mapaNodos.get(origen);
-            int destinoIdx = mapaNodos.get(destino);
+                // Verificamos si el destino está en nuestro mapa (debería)
+                if (mapaNodos.containsKey(destino.getNombre())) {
+                    int destinoIdx = mapaNodos.get(destino.getNombre());
 
-            grafo.agregarArista(origenIdx, destinoIdx, peso);
+                    // Agregamos la arista a tu grafo
+                    grafo.agregarArista(origenIdx, destinoIdx, peso); // [cite: 7]
 
-            System.out.println("Origen: " + origen + " → Destino: " + destino + " | Cuadras: " + peso);
+                    System.out.println("Origen: " + origen.getNombre() + " → Destino: " + destino.getNombre() + " | Cuadras: " + peso);
+                }
+            }
         }
 
-        GrafoDijkstra.DijkstraResultadoCompleto resultados = grafo.dijkstra(0);
+        // --- 4. EJECUTAR DIJKSTRA ---
+        // (El resto de tu código es idéntico, porque ya preparamos los datos
+        // exactamente como tu GrafoDijkstra los esperaba)
+
+        // Asumimos que "Restaurante" es el nodo 0 (o lo buscamos)
+        int inicioIdx = mapaNodos.get("Restaurante");
+
+        GrafoDijkstra.DijkstraResultadoCompleto resultados = grafo.dijkstra(inicioIdx); //
 
         int[] distancias = resultados.distancias;
         int[] anterior = resultados.anterior;
 
         List<Map<String, Object>> caminos = new ArrayList<>();
 
-        for (int i = 1; i < NOMBRES_NODOS.length; i++) {
-            List<String> recorrido = reconstruirCamino(i, anterior, NOMBRES_NODOS);
+        for (int j = 0; j < n; j++) {
+            if (j == inicioIdx) continue; // Saltear el nodo de origen
+
+            List<String> recorrido = reconstruirCamino(j, anterior, NOMBRES_NODOS); // [cite: 6]
 
             Map<String, Object> info = new HashMap<>();
-            info.put("Origen", NOMBRES_NODOS[0]);
-            info.put("destino", NOMBRES_NODOS[i]);
+            info.put("Origen", NOMBRES_NODOS[inicioIdx]);
+            info.put("destino", NOMBRES_NODOS[j]);
             info.put("recorrido", recorrido);
-            info.put("distancia", distancias[i]);
+            info.put("distancia", distancias[j]);
             caminos.add(info);
 
-            System.out.println("Ruta: " + recorrido + " | Distancia: " + distancias[i]);
+            System.out.println("Ruta: " + recorrido + " | Distancia: " + distancias[j]);
         }
 
         return caminos;
@@ -73,6 +106,13 @@ public class ServicioDijkstra {
     private List<String> reconstruirCamino(int destino, int[] anterior, String[] nombres) {
         LinkedList<String> camino = new LinkedList<>();
         int actual = destino;
+
+        // Manejar el caso de un nodo inalcanzable
+        if (anterior[actual] == -1 && actual != 0) { // Asumiendo 0 como inicio
+            camino.addFirst(nombres[actual]);
+            camino.addFirst("Inalcanzable desde " + nombres[0]);
+            return camino;
+        }
 
         while (actual != -1) {
             camino.addFirst(nombres[actual]);

@@ -2,7 +2,10 @@ package com.example.TPO_Progra_III.service;
 
 import com.example.TPO_Progra_III.dto.ConexionPrimDTO;
 import com.example.TPO_Progra_III.dto.PrimResultado;
+import com.example.TPO_Progra_III.model.prim.ConexionPrim;
 import com.example.TPO_Progra_III.model.prim.GrafoPrim;
+import com.example.TPO_Progra_III.model.prim.SucursalPrim;
+import com.example.TPO_Progra_III.repository.SucursalRepository; // <- NUEVO
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -10,21 +13,36 @@ import java.util.*;
 @Service
 public class ServicioPrim {
 
-    private final String[] NOMBRES_NODOS = {
-            "Restaurante", "Sucursal Zona Norte", "Sucursal Zona Sur", "Proveedor", "Depósito Central"
-    };
+    // --- ¡NUEVO! Inyectamos el repositorio ---
+    private final SucursalRepository sucursalRepository;
+
+    public ServicioPrim(SucursalRepository sucursalRepository) {
+        this.sucursalRepository = sucursalRepository;
+    }
+
+    // Clase interna helper para devolver el grafo y el mapa de nombres
+    private record GrafoConstruido(GrafoPrim grafo, String[] nombres) {}
 
     /**
      * Calcula el Árbol de Recubrimiento Mínimo (MST) usando Prim,
-     * con los datos cargados desde un diccionario en memoria.
+     * con los datos cargados desde Neo4j.
      */
     public PrimResultado calcularMST() {
-        GrafoPrim grafo = construirGrafoDesdeDiccionario();
+        // 1. Construir el grafo desde Neo4j
+        GrafoConstruido datos = construirGrafoDesdeNeo4j();
+        GrafoPrim grafo = datos.grafo;
+        String[] NOMBRES_NODOS = datos.nombres;
 
+        if (NOMBRES_NODOS.length == 0) {
+            return new PrimResultado(Collections.emptyList(), 0);
+        }
+
+        // 2. Ejecutar Prim
         GrafoPrim.PrimResultadoCompleto resultados = grafo.prim();
         int[] costo = resultados.costo;
         int[] padre = resultados.padre;
 
+        // 3. Formatear la respuesta (igual que antes)
         List<ConexionPrimDTO> conexionesDTO = new ArrayList<>();
         int costoTotal = 0;
 
@@ -42,36 +60,56 @@ public class ServicioPrim {
         return new PrimResultado(conexionesDTO, costoTotal);
     }
 
-    private GrafoPrim construirGrafoDesdeDiccionario() {
-        List<Map<String, Object>> conexiones = List.of(
-                Map.of("origen", "Restaurante", "destino", "Sucursal Zona Norte", "peso", 10),
-                Map.of("origen", "Restaurante", "destino", "Sucursal Zona Sur", "peso", 5),
-                Map.of("origen", "Sucursal Zona Norte", "destino", "Proveedor", "peso", 2),
-                Map.of("origen", "Sucursal Zona Norte", "destino", "Depósito Central", "peso", 8),
-                Map.of("origen", "Sucursal Zona Sur", "destino", "Proveedor", "peso", 4),
-                Map.of("origen", "Proveedor", "destino", "Depósito Central", "peso", 3)
-        );
+    /**
+     * Método privado que consulta Neo4j y prepara el grafo.
+     */
+    private GrafoConstruido construirGrafoDesdeNeo4j() {
+        // 1. LEER NODOS DESDE NEO4J
+        List<SucursalPrim> nodos = sucursalRepository.findAll();
+        int n = nodos.size();
 
+        GrafoPrim grafo = new GrafoPrim(n);
+
+        // 2. MAPEAR NODOS A ÍNDICES
         Map<String, Integer> mapaNodos = new HashMap<>();
-        for (int i = 0; i < NOMBRES_NODOS.length; i++) {
-            mapaNodos.put(NOMBRES_NODOS[i], i);
+        String[] NOMBRES_NODOS = new String[n];
+
+        int i = 0;
+        for (SucursalPrim nodo : nodos) {
+            mapaNodos.put(nodo.getNombre(), i);
+            NOMBRES_NODOS[i] = nodo.getNombre();
+            i++;
         }
 
-        GrafoPrim grafo = new GrafoPrim(NOMBRES_NODOS.length);
+        // 3. AGREGAR ARISTAS AL GRAFO
+        // Usamos un Set para evitar agregar la arista A->B y B->A duplicada,
+        // ya que tu GrafoPrim seguramente maneja la bidireccionalidad.
+        Set<String> aristasAgregadas = new HashSet<>();
 
-        for (Map<String, Object> conexion : conexiones) {
-            String origen = (String) conexion.get("origen");
-            String destino = (String) conexion.get("destino");
-            int peso = (int) conexion.get("peso");
+        for (SucursalPrim origen : nodos) {
+            int origenIdx = mapaNodos.get(origen.getNombre());
 
-            int origenIdx = mapaNodos.get(origen);
-            int destinoIdx = mapaNodos.get(destino);
+            for (ConexionPrim conexion : origen.getConexiones()) {
+                SucursalPrim destino = conexion.getSucursal();
+                int peso = conexion.getPeso();
 
-            grafo.agregarArista(origenIdx, destinoIdx, peso);
+                if (mapaNodos.containsKey(destino.getNombre())) {
+                    int destinoIdx = mapaNodos.get(destino.getNombre());
 
-            System.out.println("Conexión agregada → " + origen + " ↔ " + destino + " | Costo: " + peso);
+                    // Clave para grafo NO DIRIGIDO:
+                    // Creamos una clave única para la arista (ej. "0-1" o "1-0")
+                    String claveArista = Math.min(origenIdx, destinoIdx) + "-" + Math.max(origenIdx, destinoIdx);
+
+                    if (!aristasAgregadas.contains(claveArista)) {
+                        grafo.agregarArista(origenIdx, destinoIdx, peso);
+                        aristasAgregadas.add(claveArista);
+
+                        System.out.println("Conexión agregada → " + origen.getNombre() + " ↔ " + destino.getNombre() + " | Costo: " + peso);
+                    }
+                }
+            }
         }
 
-        return grafo;
+        return new GrafoConstruido(grafo, NOMBRES_NODOS);
     }
 }
