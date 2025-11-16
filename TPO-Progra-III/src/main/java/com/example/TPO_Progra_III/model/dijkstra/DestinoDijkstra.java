@@ -14,7 +14,6 @@ public class DestinoDijkstra {
     private final String nombre;
 
     // Usamos 'direction = OUTGOING' para un grafo dirigido,
-    // tal como tu código lo implementa.
     @Relationship(type = "RUTA_A", direction = Relationship.Direction.OUTGOING)
     private Set<RutaDijkstra> rutas = new HashSet<>();
 

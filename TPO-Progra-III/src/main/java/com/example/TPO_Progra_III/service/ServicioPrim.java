@@ -13,22 +13,15 @@ import java.util.*;
 @Service
 public class ServicioPrim {
 
-    // --- ¡NUEVO! Inyectamos el repositorio ---
     private final SucursalRepository sucursalRepository;
 
     public ServicioPrim(SucursalRepository sucursalRepository) {
         this.sucursalRepository = sucursalRepository;
     }
 
-    // Clase interna helper para devolver el grafo y el mapa de nombres
     private record GrafoConstruido(GrafoPrim grafo, String[] nombres) {}
 
-    /**
-     * Calcula el Árbol de Recubrimiento Mínimo (MST) usando Prim,
-     * con los datos cargados desde Neo4j.
-     */
     public PrimResultado calcularMST() {
-        // 1. Construir el grafo desde Neo4j
         GrafoConstruido datos = construirGrafoDesdeNeo4j();
         GrafoPrim grafo = datos.grafo;
         String[] NOMBRES_NODOS = datos.nombres;
@@ -37,12 +30,12 @@ public class ServicioPrim {
             return new PrimResultado(Collections.emptyList(), 0);
         }
 
-        // 2. Ejecutar Prim
+        // Ejecutar Prim
         GrafoPrim.PrimResultadoCompleto resultados = grafo.prim();
         int[] costo = resultados.costo;
         int[] padre = resultados.padre;
 
-        // 3. Formatear la respuesta (igual que antes)
+        // Formatear la respuesta (igual que antes)
         List<ConexionPrimDTO> conexionesDTO = new ArrayList<>();
         int costoTotal = 0;
 
@@ -83,7 +76,6 @@ public class ServicioPrim {
 
         // 3. AGREGAR ARISTAS AL GRAFO
         // Usamos un Set para evitar agregar la arista A->B y B->A duplicada,
-        // ya que tu GrafoPrim seguramente maneja la bidireccionalidad.
         Set<String> aristasAgregadas = new HashSet<>();
 
         for (SucursalPrim origen : nodos) {

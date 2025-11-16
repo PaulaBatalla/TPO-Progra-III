@@ -11,10 +11,8 @@ import java.util.*;
 @Service
 public class ServicioKruskal {
 
-    // --- ¡NUEVO! Inyectamos el repositorio ---
     private final ProveedorRepository proveedorRepository;
 
-    // Clase interna helper para devolver el grafo y el mapa de nombres
     private record GrafoConstruido(GrafoKruskal grafo, String[] nombres) {}
 
     public ServicioKruskal(ProveedorRepository proveedorRepository) { // <- NUEVO
@@ -25,7 +23,6 @@ public class ServicioKruskal {
      * Calcula la red de abastecimiento mínima entre proveedores (árbol mínimo).
      */
     public Map<String, Object> calcularRedAbastecimiento() {
-        // 1. Construir el grafo desde Neo4j
         GrafoConstruido datos = construirGrafoDesdeNeo4j(); // <- MÉTODO ACTUALIZADO
         GrafoKruskal grafo = datos.grafo;
         String[] NOMBRES_NODOS = datos.nombres;
@@ -34,10 +31,9 @@ public class ServicioKruskal {
             return Collections.emptyMap();
         }
 
-        // 2. Ejecutar Kruskal
+        // Ejecutar Kruskal
         List<GrafoKruskal.Arista> mst = grafo.kruskalMST();
 
-        // 3. Formatear la respuesta (tu código original)
         List<Map<String, Object>> conexiones = new ArrayList<>();
         int total = 0;
 

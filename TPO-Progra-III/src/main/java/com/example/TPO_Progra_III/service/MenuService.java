@@ -49,17 +49,13 @@ public class MenuService {
 
         PlatoDTO platoActual = platos.get(indice);
 
-        // --- Decisión A: INCLUIR ---
 
         combinacionActual.add(platoActual);
 
-        // --- LA CORRECCIÓN ESTÁ AQUÍ ---
         backtrackHelper(platos, objetivo, soluciones, combinacionActual, sumaActual + platoActual.precio(), indice + 1);
 
         combinacionActual.remove(combinacionActual.size() - 1);
 
-
-        // --- Decisión B: NO INCLUIR ---
         backtrackHelper(platos, objetivo, soluciones, combinacionActual, sumaActual, indice + 1);
     }
 }

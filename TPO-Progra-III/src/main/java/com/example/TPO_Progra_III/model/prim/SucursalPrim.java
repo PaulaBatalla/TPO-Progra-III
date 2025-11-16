@@ -13,7 +13,6 @@ public class SucursalPrim {
     @Id
     private final String nombre;
 
-    // Usamos UNDIRECTED porque el grafo de Prim no es dirigido
     @Relationship(type = "CONEXION_CON", direction = org.springframework.data.neo4j.core.schema.Relationship.Direction.OUTGOING)
     private Set<ConexionPrim> conexiones = new HashSet<>();
 

@@ -1,8 +1,6 @@
 package com.example.TPO_Progra_III.dto;
 import java.util.List;
 
-// No usamos 'record' aquí porque necesitamos setters para que Jackson funcione
-// o un constructor que lo tome todo. Vamos por la vía tradicional.
 public class CombinacionRequestDTO {
 
     private double precioObjetivo;

@@ -10,20 +10,15 @@ import java.util.*;
 @Service
 public class RutaService {
 
-    // ¡Ahora inyectamos el repositorio real!
     private final UbicacionRepository ubicacionRepository;
 
     public RutaService(UbicacionRepository ubicacionRepository) {
         this.ubicacionRepository = ubicacionRepository;
     }
 
-    /**
-     * Esta función AHORA SÍ CONSTRUYE EL GRAFO DESDE NEO4J
-     */
     private Map<String, List<String>> getGrafo() {
         Map<String, List<String>> adj = new HashMap<>();
 
-        // Traemos todas las ubicaciones de la BBDD
         List<Ubicacion> ubicaciones = ubicacionRepository.findAll();
 
         for (Ubicacion u : ubicaciones) {
@@ -40,8 +35,7 @@ public class RutaService {
     }
 
     /**
-     * 🧠 ALGORITMO BFS (Búsqueda en Anchura)
-     * (Este método no cambia, porque ahora getGrafo() le da los datos reales)
+     *  ALGORITMO BFS (Búsqueda en Anchura)
      */
     public List<String> encontrarCaminoBfs(String inicio, String fin) {
         Map<String, List<String>> grafo = getGrafo();
@@ -76,8 +70,7 @@ public class RutaService {
     }
 
     /**
-     * 🧠 ALGORITMO DFS (Búsqueda en Profundidad)
-     * (Este método tampoco cambia)
+     * ALGORITMO DFS (Búsqueda en Profundidad)
      */
     public List<String> encontrarCaminoDfs(String inicio, String fin) {
         Map<String, List<String>> grafo = getGrafo();

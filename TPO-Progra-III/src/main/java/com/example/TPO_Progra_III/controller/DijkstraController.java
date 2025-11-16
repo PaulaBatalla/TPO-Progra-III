@@ -18,7 +18,7 @@ public class DijkstraController {
     }
 
     /**
-     * Endpoint JSON — devuelve los caminos mínimos en formato estructurado (para el frontend).
+     * Endpoint JSON — devuelve los caminos mínimos en formato estructurado.
      */
     @GetMapping("/diccionario")
     public List<Map<String, Object>> mostrarDesdeDiccionario() {
@@ -27,7 +27,6 @@ public class DijkstraController {
 
     /**
      * Endpoint de texto — devuelve los caminos formateados como texto para leerlos en el navegador.
-     * Ideal para mostrar o testear sin usar Postman.
      */
     @GetMapping(value = "/diccionario/texto", produces = "text/html; charset=UTF-8")
     public String mostrarComoTexto() {

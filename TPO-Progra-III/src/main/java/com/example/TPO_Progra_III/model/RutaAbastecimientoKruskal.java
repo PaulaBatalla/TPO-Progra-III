@@ -14,12 +14,12 @@ public class RutaAbastecimientoKruskal {
     private Long id;
 
     @TargetNode
-    private final ProveedorKruskal proveedor; // <-- Nombre actualizado
+    private final ProveedorKruskal proveedor;
 
     @Property("peso")
     private final int peso;
 
-    public RutaAbastecimientoKruskal(ProveedorKruskal proveedor, int peso) { // <-- Nombre actualizado
+    public RutaAbastecimientoKruskal(ProveedorKruskal proveedor, int peso) {
         this.proveedor = proveedor;
         this.peso = peso;
     }

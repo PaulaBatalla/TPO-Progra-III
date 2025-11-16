@@ -11,23 +11,17 @@ import java.util.*;
 @Service
 public class ServicioDijkstra {
 
-    // --- ¡NUEVO! Inyectamos el repositorio ---
     private final DestinoRepository destinoRepository;
 
     public ServicioDijkstra(DestinoRepository destinoRepository) {
         this.destinoRepository = destinoRepository;
     }
 
-    /**
-     * Calcula los caminos mínimos a partir de los datos en Neo4j.
-     */
+
     public List<Map<String, Object>> calcularCaminosDesdeDiccionario() {
 
-        // --- 1. LEER DATOS DESDE NEO4J ---
-        // Obtenemos todos los nodos (Destino)
         List<DestinoDijkstra> nodos = destinoRepository.findAll();
 
-        // Contamos cuántos nodos hay para inicializar el grafo
         int n = nodos.size();
         if (n == 0) {
             return Collections.emptyList(); // No hay datos
@@ -35,10 +29,7 @@ public class ServicioDijkstra {
 
         GrafoDijkstra grafo = new GrafoDijkstra(n);
 
-        // --- 2. MAPEAR NODOS A ÍNDICES ---
-        // Tu GrafoDijkstra funciona con índices (0, 1, 2...).
-        // Necesitamos crear un mapa (String -> int) y un array (int -> String)
-        // para hacer la "traducción".
+        // --- MAPEAR NODOS A ÍNDICES ---
         Map<String, Integer> mapaNodos = new HashMap<>();
         String[] NOMBRES_NODOS = new String[n];
 
@@ -49,21 +40,17 @@ public class ServicioDijkstra {
             i++;
         }
 
-        // --- 3. AGREGAR ARISTAS AL GRAFO ---
-        // Iteramos sobre cada nodo y sus relaciones (Rutas)
+        // --- AGREGAR ARISTAS AL GRAFO ---
         for (DestinoDijkstra origen : nodos) {
             int origenIdx = mapaNodos.get(origen.getNombre());
 
-            // Obtenemos las rutas salientes
             for (RutaDijkstra ruta : origen.getRutas()) {
                 DestinoDijkstra destino = ruta.getDestino();
                 int peso = ruta.getPeso();
 
-                // Verificamos si el destino está en nuestro mapa (debería)
                 if (mapaNodos.containsKey(destino.getNombre())) {
                     int destinoIdx = mapaNodos.get(destino.getNombre());
 
-                    // Agregamos la arista a tu grafo
                     grafo.agregarArista(origenIdx, destinoIdx, peso); // [cite: 7]
 
                     System.out.println("Origen: " + origen.getNombre() + " → Destino: " + destino.getNombre() + " | Cuadras: " + peso);
@@ -71,11 +58,8 @@ public class ServicioDijkstra {
             }
         }
 
-        // --- 4. EJECUTAR DIJKSTRA ---
-        // (El resto de tu código es idéntico, porque ya preparamos los datos
-        // exactamente como tu GrafoDijkstra los esperaba)
+        // --- EJECUTAR DIJKSTRA ---
 
-        // Asumimos que "Restaurante" es el nodo 0 (o lo buscamos)
         int inicioIdx = mapaNodos.get("Restaurante");
 
         GrafoDijkstra.DijkstraResultadoCompleto resultados = grafo.dijkstra(inicioIdx); //

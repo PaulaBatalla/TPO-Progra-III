@@ -27,7 +27,7 @@ public class DeliveryController {
     private DynamicProgrammingService dpService;
 
     /**
-     * Branch & Bound (ya existente en tu TP)
+     * Branch & Bound
      */
     @PostMapping("/optimizar")
     public ResponseEntity<OptimizarResponseDTO> optimizarEntrega(
@@ -42,7 +42,7 @@ public class DeliveryController {
     }
 
     /**
-     * NUEVO — Algoritmo Greedy
+     * Algoritmo Greedy
      * Selecciona pedidos según el mejor ratio beneficio/peso.
      */
     @PostMapping("/optimizar-greedy")
@@ -58,7 +58,7 @@ public class DeliveryController {
     }
 
     /**
-     * NUEVO — Programación Dinámica (Knapsack DP)
+     *  Programación Dinámica
      * Encuentra la solución óptima mediante tabla DP.
      */
     @PostMapping("/optimizar-dp")

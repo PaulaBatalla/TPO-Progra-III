@@ -11,7 +11,7 @@ public class GrafoDijkstra {
 
     public static class DijkstraResultadoCompleto {
         public final int[] distancias;
-        public final int[] anterior; // Arreglo de predecesores
+        public final int[] anterior;
 
         public DijkstraResultadoCompleto(int[] distancias, int[] anterior) {
             this.distancias = distancias;

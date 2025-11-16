@@ -127,7 +127,6 @@ public class ServicioOrdenamiento {
         }
     }
 
-    // --- Utilidad ---
     private void swap(List<Pedido> list, int i, int j) {
         Pedido temp = list.get(i);
         list.set(i, list.get(j));

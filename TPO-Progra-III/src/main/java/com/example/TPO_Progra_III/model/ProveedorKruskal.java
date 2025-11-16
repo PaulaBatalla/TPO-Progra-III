@@ -7,7 +7,7 @@ import org.springframework.data.neo4j.core.schema.Relationship;
 import java.util.HashSet;
 import java.util.Set;
 
-@Node("Proveedor") // La etiqueta en Neo4j seguirá siendo "Proveedor"
+@Node("Proveedor")
 public class ProveedorKruskal {
 
     @Id
