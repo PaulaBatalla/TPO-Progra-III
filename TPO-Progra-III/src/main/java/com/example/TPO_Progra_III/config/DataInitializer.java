@@ -1,6 +1,7 @@
 package com.example.TPO_Progra_III.config;
 
-import com.example.TPO_Progra_III.model.Ubicacion;
+import com.example.TPO_Progra_III.model.dijkstra.DestinoDijkstra;
+import com.example.TPO_Progra_III.repository.DestinoRepository;
 import com.example.TPO_Progra_III.repository.UbicacionRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -9,55 +10,53 @@ import org.springframework.stereotype.Component;
 public class DataInitializer implements CommandLineRunner {
 
     private final UbicacionRepository ubicacionRepository;
+    private final DestinoRepository destinoRepository; // <- NUEVO
 
-    public DataInitializer(UbicacionRepository ubicacionRepository) {
+    // MODIFICAR EL CONSTRUCTOR
+    public DataInitializer(UbicacionRepository ubicacionRepository, DestinoRepository destinoRepository) {
         this.ubicacionRepository = ubicacionRepository;
+        this.destinoRepository = destinoRepository; // <- NUEVO
     }
 
     @Override
     public void run(String... args) throws Exception {
-        // Limpiamos la base de datos para evitar duplicados al reiniciar
-        ubicacionRepository.deleteAll();
 
-        // 1. Crear Nodos
-        Ubicacion cocina = new Ubicacion("Cocina");
-        Ubicacion pasillo = new Ubicacion("Pasillo_Central");
-        Ubicacion deposito = new Ubicacion("Depósito");
-        Ubicacion freezer = new Ubicacion("Freezer");
-        Ubicacion barra = new Ubicacion("Barra");
-        Ubicacion salon = new Ubicacion("Salón");
-        Ubicacion banos = new Ubicacion("Baños");
+        // --- INICIALIZADOR DE UBICACION (BFS/DFS) ---
+        // (Tu código de Ubicacion... se queda como está)
+        // ...
 
-        // 2. Crear Relaciones (bidireccionales para el recorrido)
-        cocina.conectaCon(pasillo);
-        cocina.conectaCon(deposito);
+        // --- NUEVO: INICIALIZADOR DE DESTINO (Dijkstra) ---
+        destinoRepository.deleteAll(); // Limpiamos datos anteriores
 
-        pasillo.conectaCon(cocina);
-        pasillo.conectaCon(barra);
-        pasillo.conectaCon(salon);
+        // 1. Crear los Nodos (Destinos)
+        DestinoDijkstra restaurante = new DestinoDijkstra("Restaurante");
+        DestinoDijkstra casaFacu = new DestinoDijkstra("Casa de Facundo");
+        DestinoDijkstra casaRamiro = new DestinoDijkstra("Casa de Ramiro");
+        DestinoDijkstra casaPaula = new DestinoDijkstra("Casa de Paula");
+        DestinoDijkstra deposito = new DestinoDijkstra("Depósito");
 
-        deposito.conectaCon(cocina);
-        deposito.conectaCon(freezer);
+        // 2. Crear Relaciones (Rutas con peso)
+        // Esto reemplaza tu lista de Mapas
+        restaurante.agregarRuta(casaFacu, 1);
+        restaurante.agregarRuta(casaRamiro, 4);
 
-        freezer.conectaCon(deposito);
+        casaFacu.agregarRuta(casaRamiro, 2);
+        casaFacu.agregarRuta(casaPaula, 6);
 
-        barra.conectaCon(pasillo);
+        casaRamiro.agregarRuta(casaPaula, 3);
 
-        salon.conectaCon(pasillo);
-        salon.conectaCon(banos);
+        casaPaula.agregarRuta(deposito, 1);
 
-        banos.conectaCon(salon);
+        deposito.agregarRuta(restaurante, 8);
 
-        // 3. Guardar todo en Neo4j
-        // (Guardamos el nodo principal y Neo4j guardará las relaciones)
-        ubicacionRepository.save(cocina);
-        ubicacionRepository.save(pasillo);
-        ubicacionRepository.save(deposito);
-        ubicacionRepository.save(freezer);
-        ubicacionRepository.save(barra);
-        ubicacionRepository.save(salon);
-        ubicacionRepository.save(banos);
+        // 3. Guardar en Neo4j
+        // (Guardamos los nodos, las relaciones se guardan en cascada)
+        destinoRepository.save(restaurante);
+        destinoRepository.save(casaFacu);
+        destinoRepository.save(casaRamiro);
+        destinoRepository.save(casaPaula);
+        destinoRepository.save(deposito);
 
-        System.out.println("--- Grafo del restaurante inicializado en Neo4j ---");
+        System.out.println("--- Grafo de Destinos (Dijkstra) inicializado en Neo4j ---");
     }
 }
