@@ -13,7 +13,7 @@ RUN mvn dependency:go-offline
 COPY src src
 
 # Compilamos y empaquetamos el .jar (usando 'mvn' directo)
-RUN mvn package -DskipTests
+RUN mvn package -DskipTests -Dproject.build.sourceEncoding=UTF-8
 
 # --- 2. Etapa de Ejecución (Runner) ---
 # Usamos la imagen oficial de Eclipse Temurin slim, que es estable.
