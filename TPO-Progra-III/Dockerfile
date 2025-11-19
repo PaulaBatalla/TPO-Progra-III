@@ -16,8 +16,8 @@ COPY src src
 RUN mvn package -DskipTests
 
 # --- 2. Etapa de Ejecución (Runner) ---
-# (Esta parte es igual a la de antes)
-FROM openjdk:17-jdk-slim
+# Usamos la imagen oficial de Eclipse Temurin slim, que es estable.
+FROM eclipse-temurin:17-jre-focal
 WORKDIR /app
 
 # Copiamos solo el .jar construido en la etapa anterior
